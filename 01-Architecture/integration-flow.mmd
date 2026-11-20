@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    participant C as Customer
+    participant M as Magento
+    participant P as Profile Service
+    participant A as API Management
+    participant D as Dataverse
+    participant O as Outbox Publisher
+    participant S as Azure Service Bus
+    participant N as Notification Service
+
+    C->>M: Register / submit company details
+    M->>P: Registration request (REST/HTTPS)
+    P->>A: Create/update company and contact
+    A->>D: Dataverse Web API (OAuth 2.0)
+    D-->>A: Company / Contact IDs
+    A-->>P: Registration accepted
+    P-->>M: Registration response
+    Note over D: Onboarding status and outbox event saved
+    O->>D: Read pending outbox events
+    O->>S: Publish CompanyRegistered / KYBSubmitted
+    S-->>N: Notification subscription
+    N-->>C: Email/SMS notification

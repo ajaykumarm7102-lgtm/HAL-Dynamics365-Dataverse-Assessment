@@ -1,0 +1,45 @@
+flowchart LR
+    Customer[Business user]
+    Staff[HAL staff]
+
+    Magento[Magento storefront]
+    Profile[Profile Service]
+    Finance[Financing Portal]
+    Backoffice[Admin Backoffice]
+
+    APIM[Azure API Management]
+    CRM[Dataverse / CRM API]
+    Bus[(Azure Service Bus)]
+    Worker[Azure Functions / Integration Workers]
+    Docs[Document Service / Blob Storage]
+    Banks[Partner Banks]
+    Notify[Notification / OTP Service]
+    Auth0[Auth0]
+    Entra[Microsoft Entra ID]
+
+    Customer -->|Sign-in| Auth0
+    Staff -->|Sign-in| Entra
+
+    Customer --> Magento
+    Customer --> Finance
+    Staff --> Backoffice
+
+    Magento <-->|REST / HTTPS| Profile
+    Profile -->|REST / HTTPS| APIM
+    Finance -->|REST / HTTPS| APIM
+    Backoffice -->|Dataverse API / secured app| CRM
+    APIM -->|Dataverse Web API / Custom API| CRM
+
+    CRM -->|Outbox publisher| Worker
+    Worker -->|Publish domain events| Bus
+    Bus -->|Subscriptions| Worker
+
+    Worker <-->|REST / HTTPS| Magento
+    Worker <-->|REST / HTTPS or bank-specific interface| Banks
+    Worker -->|Notification request| Notify
+    CRM <-->|Metadata / secure reference| Docs
+    Docs -->|Private object storage| Blob[(Azure Blob Storage)]
+
+    APIM -.->|Validate customer JWT| Auth0
+    Backoffice -.->|Staff identity| Entra
+    Worker -.->|Managed identity / app identity| Entra
